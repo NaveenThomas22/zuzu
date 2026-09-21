@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #FDF6E3;
+  --color-cyan-pp: #4DD0E1;
+  --color-cyan-light: #B2EBF2;
+  --color-mint: #A5D6A7;
+  --color-pink-pp: #F48FB1;
+  --color-yellow-pp: #FFF176;
+  --color-lavender: #CE93D8;
+  --color-soft-pink: #F8BBD0;
+  --color-ink: #1A1A1A;
+
+  --font-pixel: "Press Start 2P", cursive;
+  --font-retro: "VT323", monospace;
+
+  --shadow-pixel-sm: 2px 2px 0px 0px #1A1A1A;
+  --shadow-pixel: 4px 4px 0px 0px #1A1A1A;
+  --shadow-pixel-lg: 6px 6px 0px 0px #1A1A1A;
+
+  --animate-blink: blink 1s steps(2) infinite;
+  --animate-bounce-pixel: bounce-pixel 0.6s steps(4) infinite;
+}
+
+@keyframes blink { 0%,50%{opacity:1} 51%,100%{opacity:0} }
+@keyframes bounce-pixel { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-retro);
+  font-size: 18px;
+  image-rendering: pixelated;
+  -webkit-font-smoothing: none;
+}
+* { border-radius: 0 !important; }
