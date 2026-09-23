@@ -1,3 +1,5 @@
+import hashlib
+import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -65,3 +67,13 @@ def get_user_id_from_token(token: str) -> str:
     if not isinstance(user_id, str) or not user_id:
         raise InvalidTokenError("Token subject is invalid")
     return user_id
+
+
+def generate_refresh_token() -> str:
+    """Generate a cryptographically secure opaque refresh token."""
+    return secrets.token_urlsafe(48)
+
+
+def hash_refresh_token(token: str) -> str:
+    """Hash a refresh token before storing it in the database."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()

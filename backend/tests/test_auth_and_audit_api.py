@@ -1,4 +1,7 @@
+from datetime import datetime, timedelta, timezone
+
 from app.main import app
+from app.models import RefreshToken
 from tests.conftest import register
 
 
@@ -32,3 +35,84 @@ def test_audit_user_isolation(client, auth_headers):
     second_headers = {"Authorization": f"Bearer {second_token}"}
     assert client.get("/api/audit-logs", params={"entity_id": first["id"]}, headers=second_headers).json() == []
     assert client.get(f"/api/accounts/{first['id']}", headers=second_headers).status_code == 404
+
+
+def test_login_sets_refresh_cookie_and_refresh_rotates_session(client):
+    user = register(client)
+    login_response = client.post("/api/auth/login", json={"email": user["email"], "password": "test-password"})
+    assert login_response.status_code == 200
+    body = login_response.json()
+    assert "access_token" in body
+    assert "zuzu_refresh_token" in login_response.cookies
+    old_refresh = login_response.cookies["zuzu_refresh_token"]
+    assert old_refresh
+
+    refresh_response = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": old_refresh})
+    assert refresh_response.status_code == 200
+    refreshed = refresh_response.json()
+    assert refreshed["access_token"]
+    assert refreshed["access_token"] != body["access_token"]
+    assert "zuzu_refresh_token" in refresh_response.cookies
+    new_refresh = refresh_response.cookies["zuzu_refresh_token"]
+    assert new_refresh
+    assert new_refresh != old_refresh
+
+    reused = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": old_refresh})
+    assert reused.status_code == 401
+
+
+def test_logout_revokes_session_and_refresh_after_logout_fails(client):
+    user = register(client)
+    login_response = client.post("/api/auth/login", json={"email": user["email"], "password": "test-password"})
+    refresh_token = login_response.cookies["zuzu_refresh_token"]
+
+    logout_response = client.post("/api/auth/logout", cookies={"zuzu_refresh_token": refresh_token})
+    assert logout_response.status_code == 200
+    assert logout_response.cookies["zuzu_refresh_token"] == ""
+
+    retry = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": refresh_token})
+    assert retry.status_code == 401
+
+
+def test_expired_and_invalid_refresh_tokens_are_rejected(client, db):
+    user = register(client)
+    login_response = client.post("/api/auth/login", json={"email": user["email"], "password": "test-password"})
+    refresh_token = login_response.cookies["zuzu_refresh_token"]
+    session = db.query(RefreshToken).filter_by(user_id=user["id"]).one()
+    session.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    db.commit()
+
+    expired = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": refresh_token})
+    assert expired.status_code == 401
+
+    invalid = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": "not-a-valid-token"})
+    assert invalid.status_code == 401
+
+
+def test_uses_valid_access_token_after_login_and_allows_multiple_sessions(client):
+    user = register(client)
+    first_login = client.post("/api/auth/login", json={"email": user["email"], "password": "test-password"})
+    second_login = client.post("/api/auth/login", json={"email": user["email"], "password": "test-password"})
+    assert first_login.status_code == 200
+    assert second_login.status_code == 200
+
+    first_access = first_login.json()["access_token"]
+    second_access = second_login.json()["access_token"]
+    assert first_access
+    assert second_access
+
+    first_me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {first_access}"})
+    second_me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {second_access}"})
+    assert first_me.status_code == 200
+    assert second_me.status_code == 200
+    assert first_me.json()["id"] == user["id"]
+    assert second_me.json()["id"] == user["id"]
+
+    first_cookie = first_login.cookies["zuzu_refresh_token"]
+    second_cookie = second_login.cookies["zuzu_refresh_token"]
+    assert first_cookie != second_cookie
+
+    first_refresh = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": first_cookie})
+    assert first_refresh.status_code == 200
+    second_refresh = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": second_cookie})
+    assert second_refresh.status_code == 200

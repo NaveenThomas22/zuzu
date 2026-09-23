@@ -17,6 +17,7 @@ from app.routers.audit_logs import router as audit_logs_router
 
 app = FastAPI(title="Expense Tracker API")
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -28,6 +29,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 app.include_router(auth_router)
 app.include_router(bills_router)

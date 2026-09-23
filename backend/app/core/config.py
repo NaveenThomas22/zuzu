@@ -16,6 +16,14 @@ class Settings:
         self.ACCESS_TOKEN_EXPIRE_MINUTES = int(
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30")
         )
+        self.REFRESH_TOKEN_EXPIRE_DAYS = int(
+            os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7")
+        )
+        self.REFRESH_COOKIE_NAME = os.getenv("REFRESH_COOKIE_NAME", "zuzu_refresh_token")
+        self.REFRESH_COOKIE_PATH = os.getenv("REFRESH_COOKIE_PATH", "/")
+        self.APP_ENV = os.getenv("APP_ENV", "development")
+        self.COOKIE_SECURE = self.APP_ENV == "production"
+        self.COOKIE_SAME_SITE = "none" if self.APP_ENV == "production" else "lax"
 
 
 settings = Settings()

@@ -5,6 +5,7 @@ from .budget import Budget
 from .category import Category
 from .lending import Lending
 from .lending_repayment import LendingRepayment
+from .refresh_token import RefreshToken
 from .subcategory import Subcategory
 from .transaction import Transaction
 from .user import User
@@ -20,4 +21,5 @@ __all__ = [
     "Budget",
     "Bill",
     "AuditLog",
+    "RefreshToken",
 ]

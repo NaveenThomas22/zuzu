@@ -50,6 +50,20 @@ const isSensitiveKey = (key) => {
   return SENSITIVE_TERMS.some(term => lowerKey.includes(term));
 };
 
+const HIDDEN_FIELDS = [
+  'id', 'user_id', 'entity_id', 'account_id', 'category_id', 'subcategory_id', 
+  'bill_id', 'lending_id', 'transaction_id', 'budget_id', 'repayment_id', 
+  'created_at', 'updated_at', 'deleted_at'
+];
+
+const isHiddenField = (key) => {
+  if (!key) return false;
+  const lowerKey = key.toLowerCase();
+  if (HIDDEN_FIELDS.includes(lowerKey)) return true;
+  if (lowerKey.endsWith('_id')) return true; // Hide any internal relationship IDs
+  return false;
+};
+
 // Safe formatting for JSON values
 const formatValue = (val) => {
   if (val === null || val === undefined) return '—';
@@ -101,7 +115,7 @@ const JSONViewer = ({ data }) => {
   return (
     <div className="flex flex-col gap-1 pl-2 border-l-[2px] border-ink/20 w-full overflow-hidden">
       {Object.entries(data).map(([k, v]) => {
-        if (isSensitiveKey(k)) return null;
+        if (isSensitiveKey(k) || isHiddenField(k)) return null;
         return (
           <div key={k} className="flex flex-col">
             <span className="font-pixel text-[8px] text-ink/70 uppercase truncate">{k}</span>
@@ -142,6 +156,8 @@ const AuditLogsPage = () => {
 
   // Modals
   const [selectedLog, setSelectedLog] = useState(null);
+
+
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -191,7 +207,9 @@ const AuditLogsPage = () => {
   // Safe renderer for inline previews
   const renderInlinePreview = (log) => {
     if (log.action === 'CREATE' && log.new_values) {
-      const displayKeys = Object.keys(log.new_values).filter(k => !isSensitiveKey(k)).slice(0, 3);
+      const displayKeys = Object.keys(log.new_values)
+        .filter(k => !isSensitiveKey(k) && !isHiddenField(k))
+        .slice(0, 3);
       return (
         <div className="flex flex-col gap-1 mt-2 mb-2">
           {displayKeys.map(k => (
@@ -200,14 +218,14 @@ const AuditLogsPage = () => {
               <span className="truncate max-w-[55%] text-right">{formatValue(log.new_values[k])}</span>
             </div>
           ))}
-          {Object.keys(log.new_values).length > 3 && <span className="font-pixel text-[8px] text-ink/50">...more</span>}
+          {Object.keys(log.new_values).filter(k => !isSensitiveKey(k) && !isHiddenField(k)).length > 3 && (
+            <span className="font-pixel text-[8px] text-ink/50">...more</span>
+          )}
         </div>
       );
     }
     if (log.action === 'UPDATE' && log.old_values && log.new_values) {
-      // Find diff keys safely
-      const keys = Object.keys(log.new_values).filter(k => !isSensitiveKey(k));
-      // Try to find actually changed keys if possible, or just show top 3
+      const keys = Object.keys(log.new_values).filter(k => !isSensitiveKey(k) && !isHiddenField(k));
       let changedKeys = keys.filter(k => log.old_values[k] !== log.new_values[k]).slice(0, 3);
       if (changedKeys.length === 0) changedKeys = keys.slice(0, 2); // fallback
       
@@ -227,7 +245,9 @@ const AuditLogsPage = () => {
       );
     }
     if (log.action === 'DELETE' && log.old_values) {
-      const displayKeys = Object.keys(log.old_values).filter(k => !isSensitiveKey(k)).slice(0, 3);
+      const displayKeys = Object.keys(log.old_values)
+        .filter(k => !isSensitiveKey(k) && !isHiddenField(k))
+        .slice(0, 3);
       return (
         <div className="flex flex-col gap-1 mt-2 mb-2">
           <span className="font-retro text-xs text-ink/70">Deleted values:</span>
@@ -393,8 +413,7 @@ const AuditLogsPage = () => {
 
                   {renderInlinePreview(log)}
 
-                  <div className="flex justify-between items-end mt-2 pt-2 border-t-[2px] border-ink/20">
-                    <span className="font-retro text-[10px] text-ink/50 truncate max-w-[50%]">ID: {log.id ? `${log.id.substring(0, 8)}...` : 'N/A'}</span>
+                  <div className="flex justify-end items-end mt-2 pt-2 border-t-[2px] border-ink/20">
                     <span className="font-retro text-[10px] text-ink/80 text-right">{formatDatetime(log.created_at)}</span>
                   </div>
                 </div>
@@ -448,9 +467,6 @@ const AuditLogsPage = () => {
               </div>
               <div className="font-retro text-xs text-ink mb-1">
                 Timestamp: <span className="font-bold">{formatDatetime(selectedLog.created_at)}</span>
-              </div>
-              <div className="font-retro text-xs text-ink">
-                Entity ID: <span className="font-bold break-all bg-cream/50 px-1">{selectedLog.entity_id}</span>
               </div>
             </div>
 

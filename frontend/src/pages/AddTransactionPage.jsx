@@ -11,6 +11,7 @@ import PixelCard from '../components/PixelCard';
 import BottomNav from '../components/BottomNav';
 import PixelError from '../components/PixelError';
 import PixelLoader from '../components/PixelLoader';
+import CategorySelector from '../components/CategorySelector';
 
 const TX_TYPES = [
   { value: 'EXPENSE', label: 'Expense', color: 'bg-pink-pp' },
@@ -110,11 +111,15 @@ const AddTransactionPage = () => {
       };
 
       if (accountId) payload.account_id = accountId;
-      if (categoryId) payload.category_id = categoryId;
-      if (subcategoryId) payload.subcategory_id = subcategoryId;
-      if (itemName) payload.item_name = itemName;
       if (description) payload.description = description;
-      if (transactionType === 'EXPENSE' && needOrWant) payload.need_or_want = needOrWant;
+      
+      const isSimpleTransaction = transactionType === 'INCOME' || transactionType === 'INVESTMENT' || transactionType === 'OPENING_BALANCE';
+      if (!isSimpleTransaction) {
+        if (categoryId) payload.category_id = categoryId;
+        if (subcategoryId) payload.subcategory_id = subcategoryId;
+        if (itemName) payload.item_name = itemName;
+        if (transactionType === 'EXPENSE' && needOrWant) payload.need_or_want = needOrWant;
+      }
 
       await createTransaction(payload);
       navigate('/');
@@ -126,6 +131,8 @@ const AddTransactionPage = () => {
   };
 
   if (loadingInitial) return <main className="max-w-md mx-auto min-h-screen bg-cream"><PixelLoader /></main>;
+
+  const showExtraFields = transactionType !== 'INCOME' && transactionType !== 'INVESTMENT' && transactionType !== 'OPENING_BALANCE';
 
   return (
     <main className="max-w-md mx-auto min-h-screen bg-cream pb-24">
@@ -210,50 +217,39 @@ const AddTransactionPage = () => {
         )}
 
         {/* Item Name */}
-        <PixelInput 
-          label="ITEM NAME" 
-          type="text" 
-          value={itemName}
-          onChange={e => setItemName(e.target.value)}
-          placeholder="E.g., Morning Coffee"
-        />
+        {showExtraFields && (
+          <PixelInput 
+            label="ITEM NAME" 
+            type="text" 
+            value={itemName}
+            onChange={e => setItemName(e.target.value)}
+            placeholder="E.g., Morning Coffee"
+          />
+        )}
 
         {/* Categories */}
-        <div>
-          <div className="flex justify-between items-end mb-2">
-            <label className="font-pixel text-xs text-ink">CATEGORY</label>
-            <button 
-              className="font-retro text-xs text-ink/60 hover:text-ink hover:underline"
-              onClick={() => setCategoryId('')}
-            >
-              CLEAR
-            </button>
+        {showExtraFields && (
+          <div>
+            <div className="flex justify-between items-end mb-2">
+              <label className="font-pixel text-xs text-ink">CATEGORY</label>
+              <button 
+                className="font-retro text-xs text-ink/60 hover:text-ink hover:underline"
+                onClick={() => setCategoryId('')}
+              >
+                CLEAR
+              </button>
+            </div>
+            <CategorySelector 
+              categories={categories} 
+              selectedId={categoryId} 
+              onSelect={setCategoryId} 
+              onClear={() => setCategoryId('')} 
+            />
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            {categories.map(c => {
-              const iconName = getCategoryIcon(c);
-              const isSelected = categoryId === c.id;
-              return (
-                <button 
-                  key={c.id}
-                  onClick={() => setCategoryId(c.id)}
-                  className={`flex flex-col items-center justify-center p-3 gap-2 border-[3px] border-ink shadow-pixel ${isSelected ? 'bg-yellow-pp translate-y-[2px] shadow-none' : 'bg-cream hover:bg-cyan-light'}`}
-                >
-                  <PixelIcon name={iconName} size={24} accent={isSelected ? '#1A1A1A' : '#4DD0E1'} />
-                  <span className="font-pixel text-[8px] uppercase text-center break-words line-clamp-1 w-full">{c.name}</span>
-                </button>
-              );
-            })}
-            {categories.length === 0 && (
-              <p className="font-retro text-sm text-ink/60 col-span-3 text-center py-4 border-[3px] border-ink border-dashed">
-                No categories found.
-              </p>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Subcategories */}
-        {categoryId && (
+        {showExtraFields && categoryId && (
           <div>
             <div className="flex justify-between items-end mb-2">
               <label className="font-pixel text-xs text-ink">SUBCATEGORY</label>

@@ -12,6 +12,9 @@ import EmptyState from '../components/EmptyState';
 import PixelLoader from '../components/PixelLoader';
 import PixelError from '../components/PixelError';
 import BottomNav from '../components/BottomNav';
+import TransactionEditModal from '../components/TransactionEditModal';
+import TransactionDeleteModal from '../components/TransactionDeleteModal';
+import { canModifyTransaction } from '../utils/transactionUtils';
 
 const TRANSACTION_TYPES = [
   'OPENING_BALANCE', 'INCOME', 'EXPENSE', 'LENDING_OUT', 
@@ -92,6 +95,10 @@ const TransactionsPage = () => {
 
   // Detail Modal
   const [selectedTx, setSelectedTx] = useState(null);
+  
+  // Edit & Delete Modals
+  const [editTx, setEditTx] = useState(null);
+  const [deleteTx, setDeleteTx] = useState(null);
 
   // Initial lookup data fetch
   useEffect(() => {
@@ -388,6 +395,23 @@ const TransactionsPage = () => {
                       {sign}₹{Number(tx.amount).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
                     </span>
                   </div>
+                  
+                  {canModifyTransaction(tx) ? (
+                    <div className="flex gap-2 mt-3 pt-3 border-t-[2px] border-ink/10" onClick={e => e.stopPropagation()}>
+                      <PixelButton variant="cyan" onClick={() => setEditTx(tx)} className="flex-1 py-1 text-[10px]">
+                        EDIT
+                      </PixelButton>
+                      <PixelButton variant="pink" onClick={() => setDeleteTx(tx)} className="flex-1 py-1 text-[10px]">
+                        DELETE
+                      </PixelButton>
+                    </div>
+                  ) : (
+                    <div className="mt-3 pt-3 border-t-[2px] border-ink/10 text-center">
+                       <span className="font-pixel text-[8px] text-ink/40 uppercase">
+                          {tx.bill_id ? 'BILL LINKED' : tx.transaction_type.replace('_', ' ')}
+                       </span>
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -502,6 +526,20 @@ const TransactionsPage = () => {
           </div>
         </div>
       )}
+
+      <TransactionEditModal
+        transaction={editTx}
+        isOpen={!!editTx}
+        onClose={() => setEditTx(null)}
+        onSuccess={fetchTransactions}
+      />
+
+      <TransactionDeleteModal
+        transaction={deleteTx}
+        isOpen={!!deleteTx}
+        onClose={() => setDeleteTx(null)}
+        onSuccess={fetchTransactions}
+      />
     </main>
   );
 };

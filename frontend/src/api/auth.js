@@ -18,6 +18,20 @@ export function loginUser(credentials) {
 }
 
 /**
+ * POST /api/auth/logout
+ */
+export function logoutUser() {
+  return apiClient.post('/api/auth/logout');
+}
+
+/**
+ * POST /api/auth/refresh
+ */
+export function refreshToken() {
+  return apiClient.post('/api/auth/refresh');
+}
+
+/**
  * GET /api/auth/me
  * @returns {Promise<{ id, name, email, gender, is_active, created_at, updated_at }>}
  */

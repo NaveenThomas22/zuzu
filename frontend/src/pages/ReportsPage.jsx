@@ -5,11 +5,21 @@ import PixelCard from '../components/PixelCard';
 import PixelLoader from '../components/PixelLoader';
 import PixelError from '../components/PixelError';
 import BottomNav from '../components/BottomNav';
+import ExpenseAnalysis from '../components/ExpenseAnalysis';
+import ExpenseList from '../components/ExpenseList';
+import { useExpenseData } from '../hooks/useExpenseData';
 
 const ReportsPage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  const [activeTab, setActiveTab] = useState('OVERVIEW');
+
+  // Shared data hook for the two Expense tabs
+  const expenseData = useExpenseData({
+    enabled: activeTab !== 'OVERVIEW'
+  });
 
   const fetchReports = async () => {
     setLoading(true);
@@ -136,14 +146,41 @@ const ReportsPage = () => {
     <main className="max-w-md mx-auto min-h-screen bg-cream pb-24">
       <div className="flex items-center justify-between p-4 bg-lavender border-b-[3px] border-ink">
         <h1 className="font-pixel text-base text-ink uppercase">Reports</h1>
-        <div className="border-[3px] border-ink bg-cream p-2 shadow-pixel-sm cursor-pointer flex items-center gap-2">
-          <span className="font-pixel text-[10px]">THIS MONTH</span>
-          <span className="font-pixel text-[10px]">▾</span>
-        </div>
+        {activeTab === 'OVERVIEW' && (
+          <div className="border-[3px] border-ink bg-cream p-2 shadow-pixel-sm cursor-pointer flex items-center gap-2">
+            <span className="font-pixel text-[10px]">THIS MONTH</span>
+            <span className="font-pixel text-[10px]">▾</span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex border-b-[3px] border-ink bg-cream overflow-x-auto hide-scrollbar">
+        <button 
+          className={`shrink-0 flex-1 min-w-[120px] p-3 font-pixel text-[10px] sm:text-xs text-center border-r-[3px] border-ink transition-colors ${activeTab === 'OVERVIEW' ? 'bg-cyan-light shadow-[inset_0_-4px_0_#1A1A1A]' : 'bg-transparent text-ink/70 hover:bg-black/5'}`}
+          onClick={() => setActiveTab('OVERVIEW')}
+        >
+          OVERVIEW
+        </button>
+        <button 
+          className={`shrink-0 flex-1 min-w-[140px] p-3 font-pixel text-[10px] sm:text-xs text-center border-r-[3px] border-ink transition-colors ${activeTab === 'ANALYSIS' ? 'bg-pink-pp shadow-[inset_0_-4px_0_#1A1A1A]' : 'bg-transparent text-ink/70 hover:bg-black/5'}`}
+          onClick={() => setActiveTab('ANALYSIS')}
+        >
+          EXPENSE ANALYSIS
+        </button>
+        <button 
+          className={`shrink-0 flex-1 min-w-[120px] p-3 font-pixel text-[10px] sm:text-xs text-center transition-colors ${activeTab === 'LIST' ? 'bg-mint shadow-[inset_0_-4px_0_#1A1A1A]' : 'bg-transparent text-ink/70 hover:bg-black/5'}`}
+          onClick={() => setActiveTab('LIST')}
+        >
+          EXPENSE LIST
+        </button>
       </div>
 
       <div className="p-4 flex flex-col gap-6 mt-2">
-        {loading ? (
+        {activeTab === 'ANALYSIS' ? (
+          <ExpenseAnalysis expenseData={expenseData} />
+        ) : activeTab === 'LIST' ? (
+          <ExpenseList expenseData={expenseData} />
+        ) : loading ? (
           <PixelLoader />
         ) : error ? (
           <PixelError message={error} onRetry={fetchReports} />

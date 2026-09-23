@@ -1,5 +1,5 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
-import { getCurrentUser, loginUser, registerUser } from '../api/auth';
+import { getCurrentUser, loginUser, registerUser, logoutUser } from '../api/auth';
 import { getErrorMessage } from '../api/client';
 
 export const AuthContext = createContext(null);
@@ -24,10 +24,10 @@ export function AuthProvider({ children }) {
       setLoading(true);
       const response = await getCurrentUser();
       setUser(response.data);
+      setToken(localStorage.getItem('pocket_pal_token')); // Sync token in case it was refreshed
       setError(null);
     } catch (err) {
-      // Token is invalid or expired
-      localStorage.removeItem('pocket_pal_token');
+      // Token is invalid or expired (and refresh failed)
       setUser(null);
       setToken(null);
       setError(null); // Don't show error on invalid stored token
@@ -77,11 +77,21 @@ export function AuthProvider({ children }) {
     }
   }, []);
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('pocket_pal_token');
-    setUser(null);
-    setToken(null);
-    setError(null);
+  const logout = useCallback(async () => {
+    try {
+      await logoutUser();
+    } catch (err) {
+      // Ignore backend failure, still log out locally
+    } finally {
+      localStorage.removeItem('pocket_pal_token');
+      setUser(null);
+      setToken(null);
+      setError(null);
+      
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        window.location.href = '/login';
+      }
+    }
   }, []);
 
   const clearError = useCallback(() => {

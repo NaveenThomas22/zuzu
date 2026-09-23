@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from .bill import Bill
     from .budget import Budget
     from .lending import Lending
+    from .refresh_token import RefreshToken
     from .subcategory import Subcategory
     from .transaction import Transaction
 
@@ -47,3 +48,4 @@ class User(Base):
     bills: Mapped[list["Bill"]] = relationship(back_populates="user")
     subcategories: Mapped[list["Subcategory"]] = relationship(back_populates="user")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="user")
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(back_populates="user", cascade="all, delete-orphan")
