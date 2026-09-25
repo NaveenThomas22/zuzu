@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import apiClient from '../api/client';
 import PixelIcon from './PixelIcon';
 import PixelDoodle from './PixelDoodle';
 import PixelSparkles from './PixelSparkles';
@@ -13,6 +15,18 @@ const HomeHeader = () => {
     : '/assets/pixel-avatar-male.jpg';
 
   const displayName = user?.name || 'Friend';
+  const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (user) {
+      apiClient.get('/api/notifications/unread-count')
+        .then(res => {
+          setUnreadCount(res.data.unread_count);
+        })
+        .catch(err => console.error("Failed to fetch unread count", err));
+    }
+  }, [user]);
 
   return (
     <div className="relative bg-cyan-pp border-b-[3px] border-ink p-3 pb-4 flex flex-col justify-between overflow-hidden sm:min-h-[140px] shadow-pixel-sm">
@@ -33,11 +47,11 @@ const HomeHeader = () => {
             <PixelDoodle type="sparkle" size={24} />
           </div>
           <div className="w-16 h-16 sm:w-20 sm:h-20 border-[3px] border-ink bg-cream p-1 shadow-pixel-sm z-10">
-            <img 
-              src={avatarSrc} 
-              alt="Zuzu avatar" 
-              className="w-full h-full object-cover" 
-              style={{ imageRendering: 'pixelated' }} 
+            <img
+              src={avatarSrc}
+              alt="Zuzu avatar"
+              className="w-full h-full object-cover"
+              style={{ imageRendering: 'pixelated' }}
             />
           </div>
           <div className="absolute -bottom-2 -right-2 z-20">
@@ -47,7 +61,7 @@ const HomeHeader = () => {
 
         {/* Center: Greeting & Quote */}
         <div className="flex flex-col flex-1 px-1 justify-start">
-          <p className="font-retro text-xs text-ink">Good Morning,</p>
+          <p className="font-retro text-xs text-ink">Welcome to Zuzu! 👋</p>
           <p className="font-pixel text-xl sm:text-2xl text-ink uppercase tracking-wide truncate max-w-[150px] sm:max-w-[180px] -mt-1 leading-tight mb-2">
             {displayName} !
           </p>
@@ -62,11 +76,30 @@ const HomeHeader = () => {
         {/* Right: CRT & Decorations */}
         <div className="flex flex-col items-center justify-between h-full relative w-20 flex-shrink-0 mr-1">
 
+          <button
+            onClick={() => navigate('/notifications')}
+            className="absolute -top-2 right-4 sm:-top-1 sm:right-6 z-30 transition-transform active:scale-95 hover:scale-105"
+            aria-label="Notifications"
+          >
+            <div className="relative">
+              <div className="w-8 h-8 flex items-center justify-center bg-cream border-[3px] border-ink rounded-full shadow-[2px_2px_0_#1A1A1A]">
+                <span className="text-lg leading-none pt-0.5">🔔</span>
+              </div>
+              {unreadCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-pink-pp border-[2px] border-ink rounded-full min-w-[20px] h-[20px] flex items-center justify-center shadow-pixel-sm px-1">
+                  <span className="font-[family-name:var(--font-pixel)] text-[10px] text-ink leading-none mt-0.5">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                </div>
+              )}
+            </div>
+          </button>
+
           <div className="absolute -top-1 -left-4">
-            <PixelIcon name="sun" size={28} accent="#FFE66D" className="animate-spin-slow drop-shadow-[2px_2px_0_#1A1A1A]" />
+            <PixelIcon name="deco-8bit-star" size={28} accent="#FFE66D" className="animate-spin-slow drop-shadow-[2px_2px_0_#1A1A1A]" />
           </div>
           <div className="absolute top-4 left-6">
-            <PixelDoodle type="heart" size={16} />
+            <PixelDoodle type="star" size={16} />
           </div>
 
           {/* Sticker: MAKE GOOD MONEY CHOICES */}

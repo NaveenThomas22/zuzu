@@ -53,7 +53,7 @@ def list_budgets(
     month: int | None = None,
     category_id: str | None = None,
 ) -> list[dict]:
-    return [service.detail(db, budget) for budget in service.list_budgets(db, current_user.id, year=year, month=month, category_id=category_id)]
+    return service.list_budgets_with_spending(db, current_user.id, year=year, month=month, category_id=category_id)
 
 
 @router.get("/{budget_id}", response_model=BudgetResponse)

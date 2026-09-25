@@ -28,7 +28,7 @@ const BottomNav = () => {
             <>
               {isActive && (
                 <div className="absolute -top-6 animate-bounce-pixel">
-                  <PixelDoodle type="heart" size={16} />
+                  <PixelDoodle type="star" size={16} />
                 </div>
               )}
               <PixelIcon name={tab.icon} size={28} accent={isActive ? "#1A1A1A" : "#CE93D8"} />

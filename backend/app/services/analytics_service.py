@@ -141,18 +141,28 @@ def _bills(db: Session, user_id: str, start_date: date | None, end_date: date | 
         conditions.append(Bill.due_date >= start_date)
     if end_date is not None:
         conditions.append(Bill.due_date <= end_date)
-    rows = list(db.scalars(select(Bill).where(*conditions)))
-    today = date.today(); pending = paid = overdue = cancelled = 0; pending_amount = _ZERO
-    for bill in rows:
-        if bill.status == "PAID":
-            paid += 1
-        elif bill.status == "CANCELLED":
-            cancelled += 1
-        elif bill.due_date < today:
-            overdue += 1; pending_amount += _money(bill.amount)
-        else:
-            pending += 1; pending_amount += _money(bill.amount)
-    return {"total_bills": len(rows), "pending": pending, "paid": paid, "overdue": overdue, "cancelled": cancelled, "total_pending_amount": pending_amount.quantize(Decimal("0.01"))}
+    today = date.today()
+    is_unpaid = Bill.status.notin_(["PAID", "CANCELLED"])
+    
+    row = db.execute(
+        select(
+            func.count(Bill.id),
+            func.coalesce(func.sum(case((Bill.status == "PAID", 1), else_=0)), 0),
+            func.coalesce(func.sum(case((Bill.status == "CANCELLED", 1), else_=0)), 0),
+            func.coalesce(func.sum(case((and_(is_unpaid, Bill.due_date < today), 1), else_=0)), 0),
+            func.coalesce(func.sum(case((and_(is_unpaid, Bill.due_date >= today), 1), else_=0)), 0),
+            func.coalesce(func.sum(case((is_unpaid, Bill.amount), else_=0)), 0),
+        ).where(*conditions)
+    ).first()
+
+    return {
+        "total_bills": int(row[0]) if row else 0,
+        "paid": int(row[1]) if row else 0,
+        "cancelled": int(row[2]) if row else 0,
+        "overdue": int(row[3]) if row else 0,
+        "pending": int(row[4]) if row else 0,
+        "total_pending_amount": Decimal(row[5] if row else 0).quantize(Decimal("0.01")),
+    }
 
 
 def get_analytics(db: Session, user_id: str, *, start_date: date | None, end_date: date | None) -> dict:

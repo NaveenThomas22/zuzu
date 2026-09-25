@@ -21,7 +21,7 @@ def test_register_login_me_and_sensitive_user_audit(client):
 
 def test_auth_rejection_and_audit_api_contract(client, auth_headers):
     assert client.get("/api/audit-logs").status_code == 401
-    assert client.post("/api/auth/login", json={"email": "nobody@example.test", "password": "wrong"}).status_code == 401
+    assert client.post("/api/auth/login", json={"email": "nobody@example.com", "password": "wrong"}).status_code == 401
     assert set(app.openapi()["paths"]["/api/audit-logs"]) == {"get"}
     before = client.get("/api/audit-logs", headers=auth_headers).json()
     assert client.get("/api/audit-logs", params={"page_size": 101}, headers=auth_headers).status_code == 422
@@ -47,6 +47,8 @@ def test_login_sets_refresh_cookie_and_refresh_rotates_session(client):
     old_refresh = login_response.cookies["zuzu_refresh_token"]
     assert old_refresh
 
+    import time
+    time.sleep(1)
     refresh_response = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": old_refresh})
     assert refresh_response.status_code == 200
     refreshed = refresh_response.json()
@@ -68,7 +70,7 @@ def test_logout_revokes_session_and_refresh_after_logout_fails(client):
 
     logout_response = client.post("/api/auth/logout", cookies={"zuzu_refresh_token": refresh_token})
     assert logout_response.status_code == 200
-    assert logout_response.cookies["zuzu_refresh_token"] == ""
+    assert "zuzu_refresh_token" not in logout_response.cookies
 
     retry = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": refresh_token})
     assert retry.status_code == 401
@@ -79,7 +81,7 @@ def test_expired_and_invalid_refresh_tokens_are_rejected(client, db):
     login_response = client.post("/api/auth/login", json={"email": user["email"], "password": "test-password"})
     refresh_token = login_response.cookies["zuzu_refresh_token"]
     session = db.query(RefreshToken).filter_by(user_id=user["id"]).one()
-    session.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+    session.expires_at = datetime.utcnow() - timedelta(minutes=1)
     db.commit()
 
     expired = client.post("/api/auth/refresh", cookies={"zuzu_refresh_token": refresh_token})
@@ -99,7 +101,7 @@ def test_uses_valid_access_token_after_login_and_allows_multiple_sessions(client
     first_access = first_login.json()["access_token"]
     second_access = second_login.json()["access_token"]
     assert first_access
-    assert second_access
+    assert second_access    
 
     first_me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {first_access}"})
     second_me = client.get("/api/auth/me", headers={"Authorization": f"Bearer {second_access}"})

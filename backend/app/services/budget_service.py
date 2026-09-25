@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import uuid4
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -65,10 +65,21 @@ def _month_bounds(year: int, month: int) -> tuple[date, date]:
 def _amount_spent(db: Session, budget: Budget) -> Decimal:
     start, end = _month_bounds(budget.year, budget.month)
     amount = db.scalar(
-        select(func.coalesce(func.sum(Transaction.amount), 0)).where(
+        select(
+            func.coalesce(
+                func.sum(
+                    case(
+                        (Transaction.transaction_type == "EXPENSE", Transaction.amount),
+                        (Transaction.transaction_type == "REFUND", -Transaction.amount),
+                        else_=0,
+                    )
+                ),
+                0,
+            )
+        ).where(
             Transaction.user_id == budget.user_id,
             Transaction.category_id == budget.category_id,
-            Transaction.transaction_type == "EXPENSE",
+            Transaction.transaction_type.in_(["EXPENSE", "REFUND"]),
             Transaction.transaction_date >= start,
             Transaction.transaction_date < end,
             Transaction.deleted_at.is_(None),
@@ -149,6 +160,73 @@ def list_budgets(
     if category_id is not None:
         statement = statement.where(Budget.category_id == category_id)
     return list(db.scalars(statement.order_by(Budget.year.desc(), Budget.month.desc(), Budget.category_id)))
+
+
+def list_budgets_with_spending(
+    db: Session, user_id: str, *, year: int | None, month: int | None, category_id: str | None
+) -> list[dict]:
+    budgets = list_budgets(db, user_id, year=year, month=month, category_id=category_id)
+    if not budgets:
+        return []
+
+    min_date = min(_month_bounds(b.year, b.month)[0] for b in budgets)
+    max_date = max(_month_bounds(b.year, b.month)[1] for b in budgets)
+    category_ids = list({b.category_id for b in budgets})
+
+    spending_query = select(
+        Transaction.category_id,
+        func.extract("year", Transaction.transaction_date).label("year"),
+        func.extract("month", Transaction.transaction_date).label("month"),
+        func.coalesce(
+            func.sum(
+                case(
+                    (Transaction.transaction_type == "EXPENSE", Transaction.amount),
+                    (Transaction.transaction_type == "REFUND", -Transaction.amount),
+                    else_=0,
+                )
+            ),
+            0,
+        ).label("spent"),
+    ).where(
+        Transaction.user_id == user_id,
+        Transaction.category_id.in_(category_ids),
+        Transaction.transaction_type.in_(["EXPENSE", "REFUND"]),
+        Transaction.transaction_date >= min_date,
+        Transaction.transaction_date < max_date,
+        Transaction.deleted_at.is_(None),
+    ).group_by(
+        Transaction.category_id,
+        func.extract("year", Transaction.transaction_date),
+        func.extract("month", Transaction.transaction_date),
+    )
+
+    spending_rows = db.execute(spending_query).all()
+    spending_map = {
+        (row.category_id, int(row.year), int(row.month)): Decimal(row.spent or 0).quantize(Decimal("0.01"))
+        for row in spending_rows
+    }
+
+    results = []
+    for budget in budgets:
+        spent = spending_map.get((budget.category_id, budget.year, budget.month), _ZERO)
+        remaining = (Decimal(budget.amount) - spent).quantize(Decimal("0.01"))
+        percentage = (spent / Decimal(budget.amount) * Decimal("100")).quantize(Decimal("0.01"))
+        
+        results.append({
+            "id": budget.id,
+            "user_id": budget.user_id,
+            "category_id": budget.category_id,
+            "category_name": budget.category.name,
+            "year": budget.year,
+            "month": budget.month,
+            "amount": budget.amount,
+            "amount_spent": spent,
+            "remaining_amount": remaining,
+            "percentage_used": percentage,
+            "created_at": budget.created_at,
+            "updated_at": budget.updated_at,
+        })
+    return results
 
 
 def update_budget(db: Session, user_id: str, budget_id: str, budget_data: BudgetUpdate) -> Budget:

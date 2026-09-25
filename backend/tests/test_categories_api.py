@@ -15,23 +15,29 @@ def _subcategory(db, category_id: str, name: str, *, user_id: str | None = None,
 
 
 def test_list_categories_is_public_and_excludes_inactive_or_deleted(client, db):
-    active = Category(id=str(uuid4()), name="Food", icon="utensils", is_active=True)
-    inactive = Category(id=str(uuid4()), name="Hidden", is_active=False)
-    deleted = Category(id=str(uuid4()), name="Removed", is_active=True, deleted_at=datetime.utcnow())
+    active_name = f"Food Test {uuid4().hex}"
+    active = Category(id=str(uuid4()), name=active_name, icon="utensils", is_active=True)
+    inactive = Category(id=str(uuid4()), name=f"Hidden {uuid4().hex}", is_active=False)
+    deleted = Category(id=str(uuid4()), name=f"Removed {uuid4().hex}", is_active=True, deleted_at=datetime.utcnow())
     db.add_all([active, inactive, deleted])
     db.commit()
 
     response = client.get("/api/categories")
 
     assert response.status_code == 200
-    assert [item["id"] for item in response.json()] == [active.id]
-    assert response.json()[0]["name"] == "Food"
-    assert response.json()[0]["icon"] == "utensils"
-    assert response.json()[0]["is_active"] is True
+    response_ids = [item["id"] for item in response.json()]
+    assert active.id in response_ids
+    assert inactive.id not in response_ids
+    assert deleted.id not in response_ids
+
+    active_item = next(item for item in response.json() if item["id"] == active.id)
+    assert active_item["name"] == active_name
+    assert active_item["icon"] == "utensils"
+    assert active_item["is_active"] is True
 
 
 def test_list_subcategories_scopes_custom_entries_to_current_user(client, db, auth_headers, user):
-    category = Category(id=str(uuid4()), name="Food", is_active=True)
+    category = Category(id=str(uuid4()), name=f"Food Test {uuid4().hex}", is_active=True)
     db.add(category)
     db.flush()
     other_user = register(client)

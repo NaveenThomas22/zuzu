@@ -24,7 +24,7 @@ def list_(db:Annotated[Session,Depends(get_db)],u:Annotated[User,Depends(get_cur
  if status_:q=q.where(Lending.status==status_)
  if start_date:q=q.where(Lending.lending_date>=start_date)
  if end_date:q=q.where(Lending.lending_date<=end_date)
- return [out(db,x) for x in db.scalars(q.order_by(Lending.lending_date.desc(),Lending.created_at.desc()))]
+ return ls.list_with_repayment_totals(db, list(db.scalars(q.order_by(Lending.lending_date.desc(),Lending.created_at.desc()))))
 @router.get("/{lid}",response_model=LendingResponse)
 def get_(lid:str,db:Annotated[Session,Depends(get_db)],u:Annotated[User,Depends(get_current_user)]):
  try:return out(db,ls.get_lending(db,u.id,lid))

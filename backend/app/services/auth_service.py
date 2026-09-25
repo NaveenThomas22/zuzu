@@ -96,8 +96,8 @@ def create_refresh_token_record(db: Session, user_id: str, raw_refresh_token: st
         id=str(uuid4()),
         user_id=user_id,
         token_hash=hash_refresh_token(raw_refresh_token),
-        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
-        created_at=datetime.now(timezone.utc),
+        expires_at=datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+        created_at=datetime.utcnow(),
     )
     db.add(session)
     db.flush()
@@ -115,7 +115,7 @@ def revoke_refresh_token_record(db: Session, session: RefreshToken | None) -> No
     if session is None:
         return
     if session.revoked_at is None:
-        session.revoked_at = datetime.now(timezone.utc)
+        session.revoked_at = datetime.utcnow()
     db.add(session)
 
 
@@ -136,7 +136,7 @@ def validate_refresh_token(db: Session, raw_refresh_token: str) -> tuple[User, R
         raise RefreshTokenError("Refresh token not found")
     if session.revoked_at is not None:
         raise RefreshTokenError("Refresh token has been revoked")
-    if session.expires_at <= datetime.now(timezone.utc):
+    if session.expires_at <= datetime.utcnow():
         raise RefreshTokenError("Refresh token has expired")
 
     user = db.get(User, session.user_id)

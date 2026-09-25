@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.models import Account, Category, Subcategory, Transaction
 from app.schemas.transaction import TransactionCreate, TransactionUpdate
 from app.services.audit_log_service import changed_values, create_log, snapshot
+from app.services.budget_notification_service import check_budget_thresholds
 
 
 class TransactionNotFoundError(Exception):
@@ -109,6 +110,9 @@ def create_transaction(
         db.rollback()
         raise TransactionServiceError from exc
 
+    if transaction.transaction_type in ("EXPENSE", "REFUND"):
+        check_budget_thresholds(db, user_id, transaction.category_id, transaction.transaction_date)
+
     return transaction
 
 
@@ -204,6 +208,9 @@ def update_transaction(
     except SQLAlchemyError as exc:
         db.rollback()
         raise TransactionServiceError from exc
+
+    if transaction.transaction_type in ("EXPENSE", "REFUND"):
+        check_budget_thresholds(db, user_id, transaction.category_id, transaction.transaction_date)
 
     return transaction
 

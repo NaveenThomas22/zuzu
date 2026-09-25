@@ -59,7 +59,7 @@ const LoginPage = () => {
 
       {/* Retro OS Application Window */}
       <div className="relative w-full max-w-[400px] flex flex-col border-[3px] border-ink shadow-pixel z-10 bg-cream">
-        
+
         {/* Window Header */}
         <div className="flex items-center justify-between px-3 py-2 bg-[#E2E0D8] border-b-[3px] border-ink shrink-0">
           <span className="font-pixel text-[10px] text-ink uppercase tracking-wider">ZUZU.EXE</span>
@@ -82,36 +82,36 @@ const LoginPage = () => {
 
         {/* Window Body */}
         <div className="p-6 sm:p-8 flex flex-col bg-[#F9F7F1]">
-          
+
           {/* Logo & Subtitle */}
           <div className="flex flex-col items-center mb-8">
             <h1 className="font-pixel text-4xl text-ink tracking-tight mb-2">ZUZU</h1>
-            <p className="font-retro text-[10px] text-ink/70 uppercase tracking-[0.2em]">Your money, your story</p>
+            <p className="font-retro text-[10px] text-ink/70 uppercase tracking-[0.2em]">Make Every Rupee Count</p>
           </div>
 
           <form onSubmit={handleLogin} className="flex flex-col gap-5">
             {error && <PixelError message={error} onRetry={() => setError(null)} />}
 
-            <PixelInput 
-              label="EMAIL" 
-              type="email" 
+            <PixelInput
+              label="EMAIL"
+              type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              required 
+              required
               placeholder="your@email.com"
             />
-            
+
             <div className="relative">
-              <PixelInput 
-                label="PASSWORD" 
-                type={showPassword ? 'text' : 'password'} 
+              <PixelInput
+                label="PASSWORD"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                required 
+                required
                 placeholder="••••••••"
               />
-              <button 
-                type="button" 
+              <button
+                type="button"
                 className="absolute right-3 top-9 text-ink/50 hover:text-ink transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
                 tabIndex="-1"

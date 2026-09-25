@@ -12,6 +12,7 @@ import BillsPage from './pages/BillsPage';
 import BudgetsPage from './pages/BudgetsPage';
 import AuditLogsPage from './pages/AuditLogsPage';
 import TransactionsPage from './pages/TransactionsPage';
+import NotificationsPage from './pages/NotificationsPage';
 import { useAuth } from './hooks/useAuth';
 import { AuthProvider } from './context/AuthContext';
 
@@ -89,6 +90,11 @@ function App() {
           <Route path="/transactions" element={
             <ProtectedRoute>
               <TransactionsPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute>
+              <NotificationsPage />
             </ProtectedRoute>
           } />
           

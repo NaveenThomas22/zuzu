@@ -44,11 +44,12 @@ def list_bills(
     status: BillStatus | None = None, bill_type: BillType | None = None,
     frequency: BillFrequency | None = None, start_date: date | None = None, end_date: date | None = None,
 ) -> list[dict]:
-    return [service.detail(db, bill) for bill in service.list_bills(
+    bills = service.list_bills(
         db, current_user.id, status=status.value if status else None,
         bill_type=bill_type.value if bill_type else None, frequency=frequency.value if frequency else None,
         start_date=start_date, end_date=end_date,
-    )]
+    )
+    return service.list_with_payment_transactions(db, bills)
 
 
 @router.get("/{bill_id}", response_model=BillResponse)

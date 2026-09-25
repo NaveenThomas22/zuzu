@@ -91,7 +91,7 @@ def test_transaction_history_user_isolation_and_soft_delete(client, auth_headers
         "/api/auth/register",
         json={
             "name": "Other User",
-            "email": f"other-{uuid4().hex}@example.test",
+            "email": f"other-{uuid4().hex}@example.com",
             "password": "test-password",
             "confirm_password": "test-password",
             "gender": "MALE",

@@ -35,14 +35,14 @@ const DECORATIONS = [
   { id: 'd4', bottom: '-20px', right: '15%', type: 'deco-burst', color: '#CE93D8', size: 32 },
   { id: 'd5', top: '45%', left: '45%', type: 'deco-cross', color: '#A5D6A7', size: 32 },
   { id: 'd6', top: '-10px', right: '35%', type: 'deco-star-small', color: '#80DEEA', size: 32 },
-  { id: 'd7', bottom: '5%', right: '45%', type: 'deco-heart-sparkle', color: '#F48FB1', size: 32 },
+  { id: 'd7', bottom: '5%', right: '45%', type: 'deco-star-small', color: '#F48FB1', size: 32 },
   { id: 'd8', top: '25%', right: '10%', type: 'deco-cluster', color: '#FFD54F', size: 32 },
 ];
 
 const CARD_DECORATIONS = {
   'bills': { type: 'deco-star-small', color: '#FFD54F', className: 'top-[-8px] right-[-8px]' },
   'food': { type: 'deco-cross', color: '#80DEEA', className: 'bottom-[-6px] left-[-6px]' },
-  'self care': { type: 'deco-heart-sparkle', color: '#F48FB1', className: 'top-[-10px] left-[-4px]' },
+  'self care': { type: 'deco-star-small', color: '#F48FB1', className: 'top-[-10px] left-[-4px]' },
   'entertainment': { type: 'deco-diamond', color: '#CE93D8', className: 'bottom-[-8px] right-[-4px]' },
 };
 

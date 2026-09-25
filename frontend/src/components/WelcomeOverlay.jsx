@@ -42,7 +42,7 @@ const WelcomeOverlay = ({ user, onComplete }) => {
         {/* Background decorations */}
         <div className="absolute top-10 right-10 opacity-70"><PixelDoodle type="sparkle" size={48} /></div>
         <div className="absolute bottom-20 left-10 opacity-70"><PixelDoodle type="star" size={32} /></div>
-        <div className="absolute top-1/4 left-1/4 opacity-70"><PixelDoodle type="heart" size={32} /></div>
+        <div className="absolute top-1/4 left-1/4 opacity-70"><PixelDoodle type="star" size={32} /></div>
         <div className="absolute top-1/2 right-1/4 opacity-70"><PixelDoodle type="rainbow" size={64} /></div>
 
         <div className="relative flex flex-col items-center justify-center w-full h-full max-w-sm mt-20 mx-auto">

@@ -7,7 +7,9 @@ import PixelError from '../components/PixelError';
 import BottomNav from '../components/BottomNav';
 import ExpenseAnalysis from '../components/ExpenseAnalysis';
 import ExpenseList from '../components/ExpenseList';
+import IncomeHistory from '../components/IncomeHistory';
 import { useExpenseData } from '../hooks/useExpenseData';
+import { useIncomeData } from '../hooks/useIncomeData';
 
 const ReportsPage = () => {
   const [data, setData] = useState(null);
@@ -18,7 +20,11 @@ const ReportsPage = () => {
 
   // Shared data hook for the two Expense tabs
   const expenseData = useExpenseData({
-    enabled: activeTab !== 'OVERVIEW'
+    enabled: activeTab === 'ANALYSIS' || activeTab === 'LIST'
+  });
+
+  const incomeData = useIncomeData({
+    enabled: activeTab === 'INCOME'
   });
 
   const fetchReports = async () => {
@@ -168,25 +174,38 @@ const ReportsPage = () => {
           EXPENSE ANALYSIS
         </button>
         <button 
-          className={`shrink-0 flex-1 min-w-[120px] p-3 font-pixel text-[10px] sm:text-xs text-center transition-colors ${activeTab === 'LIST' ? 'bg-mint shadow-[inset_0_-4px_0_#1A1A1A]' : 'bg-transparent text-ink/70 hover:bg-black/5'}`}
+          className={`shrink-0 flex-1 min-w-[120px] p-3 font-pixel text-[10px] sm:text-xs text-center border-r-[3px] border-ink transition-colors ${activeTab === 'LIST' ? 'bg-mint shadow-[inset_0_-4px_0_#1A1A1A]' : 'bg-transparent text-ink/70 hover:bg-black/5'}`}
           onClick={() => setActiveTab('LIST')}
         >
           EXPENSE LIST
         </button>
+        <button 
+          className={`shrink-0 flex-1 min-w-[120px] p-3 font-pixel text-[10px] sm:text-xs text-center transition-colors ${activeTab === 'INCOME' ? 'bg-yellow-pp shadow-[inset_0_-4px_0_#1A1A1A]' : 'bg-transparent text-ink/70 hover:bg-black/5'}`}
+          onClick={() => setActiveTab('INCOME')}
+        >
+          INCOME HISTORY
+        </button>
       </div>
 
       <div className="p-4 flex flex-col gap-6 mt-2">
-        {activeTab === 'ANALYSIS' ? (
+        <div className={activeTab === 'ANALYSIS' ? 'block' : 'hidden'}>
           <ExpenseAnalysis expenseData={expenseData} />
-        ) : activeTab === 'LIST' ? (
+        </div>
+        <div className={activeTab === 'LIST' ? 'block' : 'hidden'}>
           <ExpenseList expenseData={expenseData} />
-        ) : loading ? (
-          <PixelLoader />
-        ) : error ? (
-          <PixelError message={error} onRetry={fetchReports} />
-        ) : (
-          <>
-            <PixelCard tape>
+        </div>
+        <div className={activeTab === 'INCOME' ? 'block' : 'hidden'}>
+          <IncomeHistory incomeData={incomeData} accountsList={expenseData.accountsList} />
+        </div>
+        
+        {activeTab === 'OVERVIEW' && (
+          loading ? (
+            <PixelLoader />
+          ) : error ? (
+            <PixelError message={error} onRetry={fetchReports} />
+          ) : (
+            <>
+              <PixelCard tape>
               <h2 className="font-pixel text-xs text-ink mb-2">EXPENSES BY CATEGORY</h2>
               <div className="border-t-[3px] border-ink w-full mb-4"></div>
               {renderPieChart(data?.expense_by_category)}
@@ -202,6 +221,7 @@ const ReportsPage = () => {
               <p className="font-retro text-lg italic text-ink">Not just expenses… a better you ♥</p>
             </div>
           </>
+          )
         )}
       </div>
 

@@ -3,7 +3,7 @@ import PixelDoodle from './PixelDoodle';
 
 const PixelSparkles = () => {
   const sparkles = useMemo(() => {
-    const types = ['sparkle', 'star', 'heart'];
+    const types = ['sparkle', 'star', 'star'];
     const items = [];
     for (let i = 0; i < 12; i++) {
       // Restrict left to either < 20% or > 80% to keep them in margins

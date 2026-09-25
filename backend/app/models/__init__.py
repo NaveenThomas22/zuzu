@@ -9,6 +9,7 @@ from .refresh_token import RefreshToken
 from .subcategory import Subcategory
 from .transaction import Transaction
 from .user import User
+from .notification import Notification
 
 __all__ = [
     "User",
@@ -22,4 +23,5 @@ __all__ = [
     "Bill",
     "AuditLog",
     "RefreshToken",
+    "Notification",
 ]

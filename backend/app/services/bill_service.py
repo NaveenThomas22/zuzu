@@ -77,6 +77,35 @@ def detail(db: Session, bill: Bill) -> dict:
     }
 
 
+def list_with_payment_transactions(db: Session, bills: list[Bill]) -> list[dict]:
+    if not bills:
+        return []
+    bill_ids = [b.id for b in bills]
+    transactions = db.scalars(
+        select(Transaction).where(Transaction.bill_id.in_(bill_ids), Transaction.deleted_at.is_(None))
+    ).all()
+    payment_map = {t.bill_id: t for t in transactions}
+    
+    return [
+        {
+            "id": bill.id,
+            "user_id": bill.user_id,
+            "bill_type": bill.bill_type,
+            "name": bill.name,
+            "amount": bill.amount,
+            "due_date": bill.due_date,
+            "frequency": bill.frequency,
+            "status": _display_status(bill),
+            "paid_at": bill.paid_at,
+            "note": bill.note,
+            "created_at": bill.created_at,
+            "updated_at": bill.updated_at,
+            "payment_transaction_id": payment_map.get(bill.id).id if payment_map.get(bill.id) else None,
+        }
+        for bill in bills
+    ]
+
+
 def create_bill(db: Session, user_id: str, data: BillCreate) -> Bill:
     bill = Bill(
         id=str(uuid4()), user_id=user_id, bill_type=data.bill_type.value, name=data.name,
@@ -207,13 +236,6 @@ def soft_delete_bill(db: Session, user_id: str, bill_id: str) -> None:
     bill_before = snapshot(bill)
     now = datetime.utcnow()
     bill.deleted_at = now
-    if bill.status == "PAID":
-        for transaction in db.scalars(
-            select(Transaction).where(Transaction.bill_id == bill.id, Transaction.deleted_at.is_(None))
-        ):
-            transaction_before = snapshot(transaction)
-            transaction.deleted_at = now
-            create_log(db, user_id, "TRANSACTION", transaction, "DELETE", transaction_before, snapshot(transaction))
     create_log(db, user_id, "BILL", bill, "DELETE", bill_before, snapshot(bill))
     try:
         db.commit()
