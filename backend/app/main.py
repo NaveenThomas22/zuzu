@@ -26,6 +26,7 @@ app.add_middleware(
         "http://localhost:5173",
         "http://localhost:5174",
         "https://zuzu-brown.vercel.app",
+        "https://refreshing-tranquility-production-5587.up.railway.app"
     ],
     allow_credentials=True,
     allow_methods=["*"],
