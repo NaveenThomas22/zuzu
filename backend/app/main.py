@@ -15,6 +15,7 @@ from app.routers.transactions import router as transactions_router
 from .routers.audit_logs import router as audit_logs_router
 from .routers.income import router as income_router
 from .routers.notifications import router as notifications_router
+from app.routers.reports_export import router as reports_export_router
 
 
 app = FastAPI(title="Expense Tracker API")
@@ -46,6 +47,7 @@ app.include_router(lendings_router)
 app.include_router(audit_logs_router)
 app.include_router(income_router)
 app.include_router(notifications_router)
+app.include_router(reports_export_router)
 
 
 @app.get("/")

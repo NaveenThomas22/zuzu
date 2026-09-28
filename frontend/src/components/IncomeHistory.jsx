@@ -8,6 +8,7 @@ import TransactionEditModal from './TransactionEditModal';
 import TransactionDeleteModal from './TransactionDeleteModal';
 import ExpensePeriodSelector from './ExpensePeriodSelector';
 import ExpenseFilters from './ExpenseFilters';
+import ExportPdfButton from './ExportPdfButton';
 import { canModifyTransaction } from '../utils/transactionUtils';
 
 const IncomeHistory = ({ incomeData, accountsList = [] }) => {
@@ -32,11 +33,23 @@ const IncomeHistory = ({ incomeData, accountsList = [] }) => {
     return <PixelError message={error} onRetry={() => fetchIncomeData(1)} />;
   }
 
+  const { start_date, end_date } = incomeData.getDateRange();
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="text-center mt-2">
-        <h2 className="font-pixel text-lg text-ink">INCOME HISTORY</h2>
-        <p className="font-retro text-[10px] text-ink/70 uppercase">EVERY PENNY YOU'VE EARNED</p>
+      <div className="flex flex-row flex-wrap items-center justify-between gap-4 mt-2">
+        <div className="text-left min-w-[150px]">
+          <h2 className="font-pixel text-lg text-ink">INCOME HISTORY</h2>
+          <p className="font-retro text-[10px] text-ink/70 uppercase">EVERY PENNY YOU'VE EARNED</p>
+        </div>
+        <ExportPdfButton 
+          endpoint="/api/reports/export/income-history/pdf" 
+          params={{
+            start_date,
+            end_date,
+            account_id: filters.account_id || undefined,
+          }}
+        />
       </div>
 
       <ExpensePeriodSelector 

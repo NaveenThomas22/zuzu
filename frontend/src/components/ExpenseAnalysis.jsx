@@ -5,6 +5,7 @@ import PixelError from './PixelError';
 import EmptyState from './EmptyState';
 import ExpensePeriodSelector from './ExpensePeriodSelector';
 import ExpenseFilters from './ExpenseFilters';
+import ExportPdfButton from './ExportPdfButton';
 
 const PieSlice = ({ startAngle, endAngle, color, radius }) => {
   const x1 = 50 + radius * Math.cos(Math.PI * startAngle / 180);
@@ -31,12 +32,19 @@ export default function ExpenseAnalysis({ expenseData }) {
 
   const { totalExpense, totalNeeds, totalWants, categoryData } = summaryData || { totalExpense: 0, totalNeeds: 0, totalWants: 0, categoryData: [] };
   const pieColors = ['#F48FB1', '#4DD0E1', '#FFF176', '#A5D6A7', '#CE93D8', '#FFB74D'];
+  const { start_date, end_date } = expenseData.getDateRange();
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <div className="text-center">
-        <h2 className="font-pixel text-lg text-ink">EXPENSE ANALYSIS</h2>
-        <p className="font-retro text-[10px] text-ink/70 uppercase">KNOW YOUR MONEY</p>
+      <div className="flex flex-row flex-wrap items-center justify-between gap-4">
+        <div className="text-left min-w-[150px]">
+          <h2 className="font-pixel text-lg text-ink">EXPENSE ANALYSIS</h2>
+          <p className="font-retro text-[10px] text-ink/70 uppercase">KNOW YOUR MONEY</p>
+        </div>
+        <ExportPdfButton 
+          endpoint="/api/reports/export/expense-analysis/pdf" 
+          params={{ start_date, end_date }} 
+        />
       </div>
 
       <ExpensePeriodSelector 

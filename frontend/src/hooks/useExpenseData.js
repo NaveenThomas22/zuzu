@@ -228,7 +228,7 @@ export function useExpenseData({ enabled = false } = {}) {
     baseDate, setBaseDate,
     customStartDate, setCustomStartDate,
     customEndDate, setCustomEndDate,
-    shiftPeriod, getPeriodLabel,
+    shiftPeriod, getPeriodLabel, getDateRange,
     fetchExpenses,
     
     // Filter State

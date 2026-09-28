@@ -10,6 +10,7 @@ import ExpenseList from '../components/ExpenseList';
 import IncomeHistory from '../components/IncomeHistory';
 import { useExpenseData } from '../hooks/useExpenseData';
 import { useIncomeData } from '../hooks/useIncomeData';
+import ExportPdfButton from '../components/ExportPdfButton';
 
 const ReportsPage = () => {
   const [data, setData] = useState(null);
@@ -153,9 +154,11 @@ const ReportsPage = () => {
       <div className="flex items-center justify-between p-4 bg-lavender border-b-[3px] border-ink">
         <h1 className="font-pixel text-base text-ink uppercase">Reports</h1>
         {activeTab === 'OVERVIEW' && (
-          <div className="border-[3px] border-ink bg-cream p-2 shadow-pixel-sm cursor-pointer flex items-center gap-2">
-            <span className="font-pixel text-[10px]">THIS MONTH</span>
-            <span className="font-pixel text-[10px]">▾</span>
+          <div className="flex items-center gap-2">
+            <div className="border-[3px] border-ink bg-cream p-1.5 sm:p-2 shadow-pixel-sm cursor-pointer flex items-center gap-2">
+              <span className="font-pixel text-[10px]">THIS MONTH</span>
+              <span className="font-pixel text-[10px]">▾</span>
+            </div>
           </div>
         )}
       </div>
@@ -205,6 +208,14 @@ const ReportsPage = () => {
             <PixelError message={error} onRetry={fetchReports} />
           ) : (
             <>
+              <div className="flex flex-row flex-wrap items-center justify-between gap-4 mb-4">
+                <div className="text-left min-w-[150px]">
+                  <h2 className="font-pixel text-lg text-ink">OVERVIEW</h2>
+                  <p className="font-retro text-[10px] text-ink/70 uppercase">FINANCIAL SUMMARY</p>
+                </div>
+                <ExportPdfButton endpoint="/api/reports/export/overview/pdf" />
+              </div>
+
               <PixelCard tape>
               <h2 className="font-pixel text-xs text-ink mb-2">EXPENSES BY CATEGORY</h2>
               <div className="border-t-[3px] border-ink w-full mb-4"></div>

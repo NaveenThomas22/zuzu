@@ -91,7 +91,7 @@ const TransactionsPage = () => {
   
   // Pagination
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(10);
 
   // Detail Modal
   const [selectedTx, setSelectedTx] = useState(null);
@@ -344,6 +344,7 @@ const TransactionsPage = () => {
                 <span className="font-pixel text-[8px] text-ink/70">PER PAGE</span>
                 <select className="bg-cream border-[1px] border-ink p-0.5 font-retro text-[10px] focus:outline-none"
                   value={pageSize} onChange={handlePageSizeChange}>
+                  <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>

@@ -10,6 +10,7 @@ import ExpensePeriodSelector from './ExpensePeriodSelector';
 import ExpenseFilters from './ExpenseFilters';
 import TransactionEditModal from './TransactionEditModal';
 import TransactionDeleteModal from './TransactionDeleteModal';
+import ExportPdfButton from './ExportPdfButton';
 import { canModifyTransaction } from '../utils/transactionUtils';
 
 const formatDatetime = (dtString) => {
@@ -82,12 +83,26 @@ export default function ExpenseList({ expenseData }) {
 
   const hasNextPage = searchedExpenses.length > page * pageSize;
   const hasPrevPage = page > 1;
+  const { start_date, end_date } = expenseData.getDateRange();
 
   return (
     <div className="flex flex-col gap-6 w-full">
-      <div className="text-center">
-        <h2 className="font-pixel text-lg text-ink">EXPENSE LIST</h2>
-        <p className="font-retro text-[10px] text-ink/70 uppercase">EVERY EXPENSE, IN ONE PLACE</p>
+      <div className="flex flex-row flex-wrap items-center justify-between gap-4">
+        <div className="text-left min-w-[150px]">
+          <h2 className="font-pixel text-lg text-ink">EXPENSE LIST</h2>
+          <p className="font-retro text-[10px] text-ink/70 uppercase">EVERY EXPENSE, IN ONE PLACE</p>
+        </div>
+        <ExportPdfButton 
+          endpoint="/api/reports/export/expense-list/pdf" 
+          params={{
+            start_date,
+            end_date,
+            account_id: filters.account_id || undefined,
+            category_id: filters.category_id || undefined,
+            subcategory_id: filters.subcategory_id || undefined,
+            need_or_want: filters.need_or_want || undefined,
+          }}
+        />
       </div>
 
       <ExpensePeriodSelector 
